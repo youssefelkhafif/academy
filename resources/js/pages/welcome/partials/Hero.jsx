@@ -1,9 +1,8 @@
 import { Link } from '@inertiajs/react';
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { ArrowRight, BookOpen, GraduationCap, LineChart } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { useAppearance } from '@/hooks/use-appearance';
 
 const easeOut = [0.22, 1, 0.36, 1];
 
@@ -50,16 +49,10 @@ const HERO_BULLETS = [
     { icon: LineChart, label: 'Track your progress' },
 ];
 
-const HERO_IMAGES = {
-    light: '/assets/svg/lightHeroImage.svg',
-    dark: '/assets/svg/darkHeroImage.svg',
-};
+const HERO_IMAGE_SRC = '/assets/svg/Online%20Learning.svg';
 
 function HeroIllustration() {
-    const { resolvedAppearance } = useAppearance();
-    const isDark = resolvedAppearance === 'dark';
     const shouldReduceMotion = useReducedMotion();
-    const src = isDark ? HERO_IMAGES.dark : HERO_IMAGES.light;
 
     return (
         <div className="relative flex w-full items-center justify-center">
@@ -76,18 +69,14 @@ function HeroIllustration() {
                 transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
             />
 
-            <AnimatePresence mode="wait">
-                <motion.img
-                    key={src}
-                    src={src}
-                    alt="LionsGeek Academy — online learning illustration"
-                    className="relative z-10 w-full max-w-md object-contain sm:max-w-lg lg:max-w-xl"
-                    initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.94, y: 12 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.96, y: -8 }}
-                    transition={{ duration: 0.45, ease: easeOut }}
-                />
-            </AnimatePresence>
+            <motion.img
+                src={HERO_IMAGE_SRC}
+                alt="LionsGeek Academy — online learning illustration"
+                className="relative z-10 w-full max-w-md object-contain sm:max-w-lg lg:max-w-xl"
+                initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.94, y: 12 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                transition={{ duration: 0.45, ease: easeOut }}
+            />
         </div>
     );
 }
@@ -167,7 +156,7 @@ export default function Hero() {
                                     </Link>
                                 </Button>
                             </motion.div>
-                            <p className="text-xs text-muted-foreground sm:text-sm">Sign in with your LionsGeek account</p>
+                            {/* <p className="text-xs text-muted-foreground sm:text-sm">Sign in with your LionsGeek account</p> */}
                         </motion.div>
                     </motion.div>
 
