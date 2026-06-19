@@ -1,4 +1,5 @@
 import { BookOpen, Clock, Eye, Layers3, MoreHorizontal } from 'lucide-react';
+import { TransText } from '@/components/TransText';
 import { Button } from '@/components/ui/button';
 import BannerVisual from './BannerVisual';
 
@@ -25,7 +26,18 @@ export default function CourseCard({
                                 {course.title?.slice(0, 2).toUpperCase()}
                             </span>
                             <p className="text-xs font-medium text-muted-foreground">
-                                Created by {course.creator_name ?? 'Local Coach'}
+                                <TransText
+                                    en="Created by"
+                                    fr="Created by"
+                                    ar="Created by"
+                                />{' '}
+                                {course.creator_name ?? (
+                                    <TransText
+                                        en="Local Coach"
+                                        fr="Local Coach"
+                                        ar="Local Coach"
+                                    />
+                                )}
                             </p>
                         </div>
                         <h3 className="max-w-2xl text-xl leading-tight font-semibold text-foreground transition-colors group-hover:text-alpha">
@@ -47,18 +59,31 @@ export default function CourseCard({
                         {course.estimated_duration_days && (
                             <span className="inline-flex w-fit items-center gap-2 rounded-full border border-border bg-background/70 px-3 py-1.5 text-xs font-medium text-muted-foreground">
                                 <Clock className="size-4 text-alpha" />
-                                {course.estimated_duration_days} days
+                                {course.estimated_duration_days}{' '}
+                                <TransText en="days" fr="days" ar="days" />
                             </span>
                         )}
                         <CountBadge
                             icon={<Layers3 className="size-4 text-alpha" />}
                             value={course.concepts_count ?? 0}
-                            label="concepts"
+                            label={
+                                <TransText
+                                    en="concepts"
+                                    fr="concepts"
+                                    ar="concepts"
+                                />
+                            }
                         />
                         <CountBadge
                             icon={<BookOpen className="size-4 text-alpha" />}
                             value={course.chapters_count ?? 0}
-                            label="chapters"
+                            label={
+                                <TransText
+                                    en="chapters"
+                                    fr="chapters"
+                                    ar="chapters"
+                                />
+                            }
                         />
                     </div>
                 </div>
@@ -98,7 +123,7 @@ export function CourseQuickActions({ onReview, onOpenMenu }) {
                 onClick={onReview}
             >
                 <Eye className="size-4" />
-                Review
+                <TransText en="Review" fr="Review" ar="Review" />
             </Button>
             <Button
                 type="button"

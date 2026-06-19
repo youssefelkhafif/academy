@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { TransText } from '@/components/TransText';
 import {
     Dialog,
     DialogContent,
@@ -26,7 +27,18 @@ export default function CourseReviewModal({
                 <DialogHeader>
                     <DialogTitle>{course.title}</DialogTitle>
                     <DialogDescription>
-                        Created by {course.creator_name ?? 'Local Coach'}
+                        <TransText
+                            en="Created by"
+                            fr="Created by"
+                            ar="Created by"
+                        />{' '}
+                        {course.creator_name ?? (
+                            <TransText
+                                en="Local Coach"
+                                fr="Local Coach"
+                                ar="Local Coach"
+                            />
+                        )}
                     </DialogDescription>
                 </DialogHeader>
 
@@ -50,19 +62,52 @@ export default function CourseReviewModal({
 
                         <div className="grid gap-2 sm:grid-cols-3">
                             <ReviewMetric
-                                label="Duration"
+                                label={
+                                    <TransText
+                                        en="Duration"
+                                        fr="Duration"
+                                        ar="Duration"
+                                    />
+                                }
                                 value={
                                     course.estimated_duration_days
-                                        ? `${course.estimated_duration_days} days`
-                                        : 'Not set'
+                                        ? (
+                                              <>
+                                                  {course.estimated_duration_days}{' '}
+                                                  <TransText
+                                                      en="days"
+                                                      fr="days"
+                                                      ar="days"
+                                                  />
+                                              </>
+                                          )
+                                        : (
+                                              <TransText
+                                                  en="Not set"
+                                                  fr="Not set"
+                                                  ar="Not set"
+                                              />
+                                          )
                                 }
                             />
                             <ReviewMetric
-                                label="Concepts"
+                                label={
+                                    <TransText
+                                        en="Concepts"
+                                        fr="Concepts"
+                                        ar="Concepts"
+                                    />
+                                }
                                 value={course.concepts_count ?? 0}
                             />
                             <ReviewMetric
-                                label="Chapters"
+                                label={
+                                    <TransText
+                                        en="Chapters"
+                                        fr="Chapters"
+                                        ar="Chapters"
+                                    />
+                                }
                                 value={course.chapters_count ?? 0}
                             />
                         </div>
@@ -75,7 +120,7 @@ export default function CourseReviewModal({
                         variant="outline"
                         onClick={() => onOpenChange(false)}
                     >
-                        Close
+                        <TransText en="Close" fr="Close" ar="Close" />
                     </Button>
                 </DialogFooter>
             </DialogContent>

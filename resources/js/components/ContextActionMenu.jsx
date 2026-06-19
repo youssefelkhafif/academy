@@ -41,7 +41,7 @@ export default function ContextActionMenu({
         >
             {actions.map((action) => (
                 <button
-                    key={action.label}
+                    key={action.id ?? action.label}
                     type="button"
                     className={`flex w-full items-center gap-2 rounded-sm px-3 py-2 text-left text-sm transition-colors ${
                         action.variant === 'danger'

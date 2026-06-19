@@ -1,4 +1,5 @@
 import { BookOpen, Clock, Layers3 } from 'lucide-react';
+import { TransText } from '@/components/TransText';
 import BannerVisual from './BannerVisual';
 import { CountBadge, CourseQuickActions } from './CourseCard';
 
@@ -32,7 +33,13 @@ export default function CourseGalleryCard({
                             {course.title?.slice(0, 2).toUpperCase()}
                         </span>
                         <p className="text-xs font-medium text-muted-foreground">
-                            {course.creator_name ?? 'Local Coach'}
+                            {course.creator_name ?? (
+                                <TransText
+                                    en="Local Coach"
+                                    fr="Local Coach"
+                                    ar="Local Coach"
+                                />
+                            )}
                         </p>
                     </div>
                     <h3 className="text-xl leading-tight font-semibold text-foreground transition-colors group-hover:text-alpha">
@@ -54,18 +61,31 @@ export default function CourseGalleryCard({
                     {course.estimated_duration_days && (
                         <span className="inline-flex w-fit items-center gap-2 rounded-full border border-border bg-muted/30 px-3 py-1.5 text-xs font-medium text-muted-foreground">
                             <Clock className="size-4 text-alpha" />
-                            {course.estimated_duration_days} days
+                            {course.estimated_duration_days}{' '}
+                            <TransText en="days" fr="days" ar="days" />
                         </span>
                     )}
                     <CountBadge
                         icon={<Layers3 className="size-4 text-alpha" />}
                         value={course.concepts_count ?? 0}
-                        label="concepts"
+                        label={
+                            <TransText
+                                en="concepts"
+                                fr="concepts"
+                                ar="concepts"
+                            />
+                        }
                     />
                     <CountBadge
                         icon={<BookOpen className="size-4 text-alpha" />}
                         value={course.chapters_count ?? 0}
-                        label="chapters"
+                        label={
+                            <TransText
+                                en="chapters"
+                                fr="chapters"
+                                ar="chapters"
+                            />
+                        }
                     />
                 </div>
             </div>

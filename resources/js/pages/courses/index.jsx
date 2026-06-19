@@ -13,6 +13,7 @@ import { useMemo, useState } from 'react';
 import ContextActionMenu from '@/components/ContextActionMenu';
 import DeleteModal from '@/components/DeleteModal';
 import SortViewMenu from '@/components/SortViewMenu';
+import { TransText } from '@/components/TransText';
 import { Button } from '@/components/ui/button';
 import CourseCard from './partials/CourseCard';
 import CourseFilters from './partials/CourseFilters';
@@ -34,20 +35,38 @@ const defaultSort = 'recently_active';
 const defaultView = 'banners';
 
 const courseSortOptions = [
-    { label: 'Recently Active', value: 'recently_active' },
-    { label: 'Date Posted', value: 'date_posted' },
+    {
+        label: (
+            <TransText
+                en="Recently Active"
+                fr="Recently Active"
+                ar="Recently Active"
+            />
+        ),
+        value: 'recently_active',
+    },
+    {
+        label: <TransText en="Date Posted" fr="Date Posted" ar="Date Posted" />,
+        value: 'date_posted',
+    },
 ];
 
 const courseViewOptions = [
-    { label: 'Banners', value: 'banners' },
-    { label: 'Cards', value: 'cards' },
+    { label: <TransText en="Banners" fr="Banners" ar="Banners" />, value: 'banners' },
+    { label: <TransText en="Cards" fr="Cards" ar="Cards" />, value: 'cards' },
 ];
 
 const courseFilterOptions = [
-    { label: 'All', value: 'all' },
-    { label: 'Drafted', value: 'draft' },
-    { label: 'Published', value: 'assigned' },
-    { label: 'Archived', value: 'archived' },
+    { label: <TransText en="All" fr="All" ar="All" />, value: 'all' },
+    { label: <TransText en="Drafted" fr="Drafted" ar="Drafted" />, value: 'draft' },
+    {
+        label: <TransText en="Published" fr="Published" ar="Published" />,
+        value: 'assigned',
+    },
+    {
+        label: <TransText en="Archived" fr="Archived" ar="Archived" />,
+        value: 'archived',
+    },
 ];
 
 const slugify = (value) =>
@@ -61,10 +80,10 @@ const courseStatus = (status) => (status === 'published' ? 'assigned' : status);
 
 const courseStatusLabel = (status) =>
     ({
-        draft: 'Draft',
-        assigned: 'Published',
-        archived: 'Archived',
-    })[courseStatus(status)] ?? 'Draft';
+        draft: <TransText en="Draft" fr="Draft" ar="Draft" />,
+        assigned: <TransText en="Published" fr="Published" ar="Published" />,
+        archived: <TransText en="Archived" fr="Archived" ar="Archived" />,
+    })[courseStatus(status)] ?? <TransText en="Draft" fr="Draft" ar="Draft" />;
 
 const courseStatusStyles = (status) =>
     ({
@@ -284,14 +303,25 @@ export default function CoursesIndex({ courses = [] }) {
                             <div className="space-y-1">
                                 <div className="flex items-center gap-2 text-xs font-medium tracking-wide text-alpha uppercase">
                                     <Layers3 className="size-4" />
-                                    Coach workspace
+                                    <TransText
+                                        en="Coach workspace"
+                                        fr="Coach workspace"
+                                        ar="Coach workspace"
+                                    />
                                 </div>
                                 <h1 className="text-2xl font-semibold text-foreground">
-                                    Courses
+                                    <TransText
+                                        en="Courses"
+                                        fr="Courses"
+                                        ar="Courses"
+                                    />
                                 </h1>
                                 <p className="max-w-2xl text-sm text-muted-foreground">
-                                    Manage reusable courses before assigning
-                                    them to promotions.
+                                    <TransText
+                                        en="Manage reusable courses before assigning them to promotions."
+                                        fr="Manage reusable courses before assigning them to promotions."
+                                        ar="Manage reusable courses before assigning them to promotions."
+                                    />
                                 </p>
                             </div>
 
@@ -303,7 +333,11 @@ export default function CoursesIndex({ courses = [] }) {
                                     onClick={openCreateModal}
                                 >
                                     <Plus />
-                                    New course
+                                    <TransText
+                                        en="New course"
+                                        fr="New course"
+                                        ar="New course"
+                                    />
                                 </Button>
                             </div>
                         </div>
@@ -313,12 +347,19 @@ export default function CoursesIndex({ courses = [] }) {
                         <div className="flex flex-col justify-between gap-4 border-b border-border p-5 lg:flex-row lg:items-center">
                             <div>
                                 <h2 className="text-lg font-semibold text-foreground">
-                                    Course catalog
+                                    <TransText
+                                        en="Course catalog"
+                                        fr="Course catalog"
+                                        ar="Course catalog"
+                                    />
                                 </h2>
                                 <p className="text-sm text-muted-foreground">
-                                    {visibleCourses.length} of {courses.length}{' '}
-                                    course{courses.length === 1 ? '' : 's'}{' '}
-                                    ready to manage.
+                                    {visibleCourses.length} / {courses.length}{' '}
+                                    <TransText
+                                        en="courses ready to manage."
+                                        fr="courses ready to manage."
+                                        ar="courses ready to manage."
+                                    />
                                 </p>
                             </div>
                             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -334,6 +375,34 @@ export default function CoursesIndex({ courses = [] }) {
                                     viewOptions={courseViewOptions}
                                     viewValue={viewMode}
                                     onViewChange={setViewMode}
+                                    triggerLabel={
+                                        <TransText
+                                            en="Sort & view"
+                                            fr="Sort & view"
+                                            ar="Sort & view"
+                                        />
+                                    }
+                                    sortLabel={
+                                        <TransText
+                                            en="Sort By"
+                                            fr="Sort By"
+                                            ar="Sort By"
+                                        />
+                                    }
+                                    viewLabel={
+                                        <TransText
+                                            en="View As"
+                                            fr="View As"
+                                            ar="View As"
+                                        />
+                                    }
+                                    resetLabel={
+                                        <TransText
+                                            en="Reset to default"
+                                            fr="Reset to default"
+                                            ar="Reset to default"
+                                        />
+                                    }
                                     onReset={() => {
                                         setSortValue(defaultSort);
                                         setViewMode(defaultView);
@@ -382,35 +451,77 @@ export default function CoursesIndex({ courses = [] }) {
                 onClose={() => setCourseMenu(null)}
                 actions={[
                     {
-                        label: 'Review course',
+                        id: 'review',
+                        label: (
+                            <TransText
+                                en="Review course"
+                                fr="Review course"
+                                ar="Review course"
+                            />
+                        ),
                         icon: <Eye className="size-4" />,
                         onSelect: (course) => openReviewModal(course),
                     },
                     {
-                        label: 'Edit course',
+                        id: 'edit',
+                        label: (
+                            <TransText
+                                en="Edit course"
+                                fr="Edit course"
+                                ar="Edit course"
+                            />
+                        ),
                         icon: <Edit3 className="size-4" />,
                         onSelect: (course) => openEditModal(course),
                     },
                     {
-                        label: 'Mark as draft',
+                        id: 'draft',
+                        label: (
+                            <TransText
+                                en="Mark as draft"
+                                fr="Mark as draft"
+                                ar="Mark as draft"
+                            />
+                        ),
                         icon: <FileText className="size-4" />,
                         onSelect: (course) =>
                             updateCourseStatus(course, 'draft'),
                     },
                     {
-                        label: 'Publish course',
+                        id: 'publish',
+                        label: (
+                            <TransText
+                                en="Publish course"
+                                fr="Publish course"
+                                ar="Publish course"
+                            />
+                        ),
                         icon: <CheckCircle2 className="size-4" />,
                         onSelect: (course) =>
                             updateCourseStatus(course, 'assigned'),
                     },
                     {
-                        label: 'Archive course',
+                        id: 'archive',
+                        label: (
+                            <TransText
+                                en="Archive course"
+                                fr="Archive course"
+                                ar="Archive course"
+                            />
+                        ),
                         icon: <Archive className="size-4" />,
                         onSelect: (course) =>
                             updateCourseStatus(course, 'archived'),
                     },
                     {
-                        label: 'Delete course',
+                        id: 'delete',
+                        label: (
+                            <TransText
+                                en="Delete course"
+                                fr="Delete course"
+                                ar="Delete course"
+                            />
+                        ),
                         icon: <Trash2 className="size-4" />,
                         variant: 'danger',
                         onSelect: (course) => {
@@ -425,10 +536,37 @@ export default function CoursesIndex({ courses = [] }) {
             <DeleteModal
                 open={Boolean(courseToDelete)}
                 onOpenChange={(open) => !open && setCourseToDelete(null)}
-                title="Delete course"
-                description={`Delete "${courseToDelete?.title ?? 'this course'}"? This action cannot be undone.`}
-                confirmLabel="Delete"
-                cancelLabel="Cancel"
+                title={
+                    <TransText
+                        en="Delete course"
+                        fr="Delete course"
+                        ar="Delete course"
+                    />
+                }
+                description={
+                    <>
+                        <TransText en="Delete" fr="Delete" ar="Delete" /> "
+                        {courseToDelete?.title ?? (
+                            <TransText
+                                en="this course"
+                                fr="this course"
+                                ar="this course"
+                            />
+                        )}
+                        "?{' '}
+                        <TransText
+                            en="This action cannot be undone."
+                            fr="This action cannot be undone."
+                            ar="This action cannot be undone."
+                        />
+                    </>
+                }
+                confirmLabel={
+                    <TransText en="Delete" fr="Delete" ar="Delete" />
+                }
+                cancelLabel={
+                    <TransText en="Cancel" fr="Cancel" ar="Cancel" />
+                }
                 loading={deleteProcessing}
                 onConfirm={deleteCourse}
             />
@@ -451,11 +589,18 @@ function EmptyCourses({ onCreate }) {
                 <Plus className="size-5" />
             </div>
             <h3 className="text-base font-semibold text-foreground">
-                No courses yet
+                <TransText
+                    en="No courses yet"
+                    fr="No courses yet"
+                    ar="No courses yet"
+                />
             </h3>
             <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-                Create the first course and it will show up here as a catalog
-                item.
+                <TransText
+                    en="Create the first course and it will show up here as a catalog item."
+                    fr="Create the first course and it will show up here as a catalog item."
+                    ar="Create the first course and it will show up here as a catalog item."
+                />
             </p>
             <Button
                 type="button"
@@ -463,7 +608,11 @@ function EmptyCourses({ onCreate }) {
                 onClick={onCreate}
             >
                 <Plus />
-                Create course
+                <TransText
+                    en="Create course"
+                    fr="Create course"
+                    ar="Create course"
+                />
             </Button>
         </div>
     );
@@ -476,11 +625,18 @@ function EmptyFilter() {
                 <Archive className="size-5 text-alpha" />
             </div>
             <h3 className="text-base font-semibold text-foreground">
-                No courses in this filter
+                <TransText
+                    en="No courses in this filter"
+                    fr="No courses in this filter"
+                    ar="No courses in this filter"
+                />
             </h3>
             <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-                Switch filters or reset the catalog view to see the full course
-                list.
+                <TransText
+                    en="Switch filters or reset the catalog view to see the full course list."
+                    fr="Switch filters or reset the catalog view to see the full course list."
+                    ar="Switch filters or reset the catalog view to see the full course list."
+                />
             </p>
         </div>
     );

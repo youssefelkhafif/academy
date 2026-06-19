@@ -1,8 +1,12 @@
 import { ImageIcon } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function BannerVisual({ imageUrl, className = 'h-56' }) {
     const [imageFailed, setImageFailed] = useState(false);
+
+    useEffect(() => {
+        setImageFailed(false);
+    }, [imageUrl]);
 
     return (
         <div className={`relative overflow-hidden bg-muted ${className}`}>

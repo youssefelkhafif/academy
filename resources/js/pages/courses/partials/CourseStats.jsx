@@ -1,9 +1,26 @@
+import { TransText } from '@/components/TransText';
+
 export default function CourseStats({ stats }) {
     return (
         <div className="grid grid-cols-3 gap-2 text-sm">
-            <Metric label="Total" value={stats.total} />
-            <Metric label="Published" value={stats.assigned} />
-            <Metric label="Drafts" value={stats.drafts} />
+            <Metric
+                label={<TransText en="Total" fr="Total" ar="Total" />}
+                value={stats.total}
+            />
+            <Metric
+                label={
+                    <TransText
+                        en="Published"
+                        fr="Published"
+                        ar="Published"
+                    />
+                }
+                value={stats.assigned}
+            />
+            <Metric
+                label={<TransText en="Drafts" fr="Drafts" ar="Drafts" />}
+                value={stats.drafts}
+            />
         </div>
     );
 }

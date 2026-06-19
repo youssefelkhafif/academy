@@ -1,5 +1,6 @@
 import { Plus, Save, X } from 'lucide-react';
 import InputError from '@/components/input-error';
+import { TransText } from '@/components/TransText';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -39,18 +40,43 @@ export default function CourseModal({
             <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
                 <DialogHeader>
                     <DialogTitle>
-                        {isEditing ? 'Edit course' : 'Create course'}
+                        {isEditing ? (
+                            <TransText
+                                en="Edit course"
+                                fr="Edit course"
+                                ar="Edit course"
+                            />
+                        ) : (
+                            <TransText
+                                en="Create course"
+                                fr="Create course"
+                                ar="Create course"
+                            />
+                        )}
                     </DialogTitle>
                     <DialogDescription>
-                        {isEditing
-                            ? 'Update the reusable course shell.'
-                            : 'Create a reusable course for the catalog.'}
+                        {isEditing ? (
+                            <TransText
+                                en="Update the reusable course shell."
+                                fr="Update the reusable course shell."
+                                ar="Update the reusable course shell."
+                            />
+                        ) : (
+                            <TransText
+                                en="Create a reusable course for the catalog."
+                                fr="Create a reusable course for the catalog."
+                                ar="Create a reusable course for the catalog."
+                            />
+                        )}
                     </DialogDescription>
                 </DialogHeader>
 
                 <form onSubmit={onSubmit} className="space-y-4">
                     <div className="grid gap-4 sm:grid-cols-2">
-                        <Field label="Title" error={form.errors.title}>
+                        <Field
+                            label={<TransText en="Title" fr="Title" ar="Title" />}
+                            error={form.errors.title}
+                        >
                             <Input
                                 value={form.data.title}
                                 onChange={(event) =>
@@ -60,7 +86,10 @@ export default function CourseModal({
                             />
                         </Field>
 
-                        <Field label="Slug" error={form.errors.slug}>
+                        <Field
+                            label={<TransText en="Slug" fr="Slug" ar="Slug" />}
+                            error={form.errors.slug}
+                        >
                             <Input
                                 value={form.data.slug}
                                 onChange={(event) =>
@@ -74,7 +103,16 @@ export default function CourseModal({
                         </Field>
                     </div>
 
-                    <Field label="Description" error={form.errors.description}>
+                    <Field
+                        label={
+                            <TransText
+                                en="Description"
+                                fr="Description"
+                                ar="Description"
+                            />
+                        }
+                        error={form.errors.description}
+                    >
                         <textarea
                             value={form.data.description}
                             onChange={(event) =>
@@ -87,7 +125,13 @@ export default function CourseModal({
 
                     <div className="grid gap-4 sm:grid-cols-2">
                         <Field
-                            label="Banner image"
+                            label={
+                                <TransText
+                                    en="Banner image"
+                                    fr="Banner image"
+                                    ar="Banner image"
+                                />
+                            }
                             error={form.errors.thumbnail}
                         >
                             <Input
@@ -103,7 +147,13 @@ export default function CourseModal({
                         </Field>
 
                         <Field
-                            label="Estimated duration"
+                            label={
+                                <TransText
+                                    en="Estimated duration"
+                                    fr="Estimated duration"
+                                    ar="Estimated duration"
+                                />
+                            }
                             error={form.errors.estimated_duration_days}
                         >
                             <Input
@@ -122,7 +172,12 @@ export default function CourseModal({
                     </div>
 
                     <div className="grid gap-4 sm:grid-cols-2">
-                        <Field label="Status" error={form.errors.status}>
+                        <Field
+                            label={
+                                <TransText en="Status" fr="Status" ar="Status" />
+                            }
+                            error={form.errors.status}
+                        >
                             <Select
                                 value={form.data.status}
                                 onValueChange={(value) =>
@@ -133,12 +188,26 @@ export default function CourseModal({
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="draft">Draft</SelectItem>
+                                    <SelectItem value="draft">
+                                        <TransText
+                                            en="Draft"
+                                            fr="Draft"
+                                            ar="Draft"
+                                        />
+                                    </SelectItem>
                                     <SelectItem value="assigned">
-                                        Published
+                                        <TransText
+                                            en="Published"
+                                            fr="Published"
+                                            ar="Published"
+                                        />
                                     </SelectItem>
                                     <SelectItem value="archived">
-                                        Archived
+                                        <TransText
+                                            en="Archived"
+                                            fr="Archived"
+                                            ar="Archived"
+                                        />
                                     </SelectItem>
                                 </SelectContent>
                             </Select>
@@ -152,7 +221,7 @@ export default function CourseModal({
                             onClick={() => onOpenChange(false)}
                         >
                             <X />
-                            Cancel
+                            <TransText en="Cancel" fr="Cancel" ar="Cancel" />
                         </Button>
                         <Button
                             type="submit"
@@ -160,11 +229,25 @@ export default function CourseModal({
                             className="bg-alpha"
                         >
                             {isEditing ? <Save /> : <Plus />}
-                            {form.processing
-                                ? 'Saving...'
-                                : isEditing
-                                  ? 'Save changes'
-                                  : 'Create course'}
+                            {form.processing ? (
+                                <TransText
+                                    en="Saving..."
+                                    fr="Saving..."
+                                    ar="Saving..."
+                                />
+                            ) : isEditing ? (
+                                <TransText
+                                    en="Save changes"
+                                    fr="Save changes"
+                                    ar="Save changes"
+                                />
+                            ) : (
+                                <TransText
+                                    en="Create course"
+                                    fr="Create course"
+                                    ar="Create course"
+                                />
+                            )}
                         </Button>
                     </DialogFooter>
                 </form>

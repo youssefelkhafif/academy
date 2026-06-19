@@ -216,6 +216,10 @@ class CourseController extends Controller
     private function uniqueSlug(string $title, ?Course $course = null): string
     {
         $baseSlug = Str::slug($title);
+        if ($baseSlug === '') {
+            $baseSlug = 'course';
+        }
+
         $slug = $baseSlug;
         $counter = 2;
 
