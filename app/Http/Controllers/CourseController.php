@@ -24,12 +24,18 @@ class CourseController extends Controller
         return Inertia::render('courses/index', [
             'courses' => Course::query()
                 ->with('creator:id,name')
+                ->withCount([
+                    'modules as concepts_count',
+                    'chapters',
+                ])
                 ->where('created_by', $manager->id)
                 ->latest()
-                ->get($this->courseColumns())
+                ->get($this->courseQueryColumns())
                 ->map(function (Course $course): array {
                     $courseData = $course->only($this->courseColumns());
                     $courseData['creator_name'] = $course->creator?->name ?? 'Local Coach';
+                    $courseData['concepts_count'] = $course->concepts_count;
+                    $courseData['chapters_count'] = $course->chapters_count;
 
                     return $courseData;
                 }),
@@ -55,6 +61,20 @@ class CourseController extends Controller
         $this->ensureOwnsCourse($request, $course);
 
         $course->update($this->validatedCourseData($request, $course));
+
+        return redirect()->route('courses.index');
+    }
+
+    public function updateStatus(Request $request, Course $course): RedirectResponse
+    {
+        $this->ensureCanManageCourses($request);
+        $this->ensureOwnsCourse($request, $course);
+
+        $data = $request->validate([
+            'status' => ['required', 'string', Rule::in(['draft', 'assigned', 'archived'])],
+        ]);
+
+        $course->update($data);
 
         return redirect()->route('courses.index');
     }
@@ -186,6 +206,11 @@ class CourseController extends Controller
         }
 
         return $columns;
+    }
+
+    private function courseQueryColumns(): array
+    {
+        return [...$this->courseColumns(), 'created_by'];
     }
 
     private function uniqueSlug(string $title, ?Course $course = null): string

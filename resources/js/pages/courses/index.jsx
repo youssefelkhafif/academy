@@ -1,37 +1,25 @@
 import { Head, router, useForm } from '@inertiajs/react';
 import {
-    Clock,
+    Archive,
+    CheckCircle2,
     Edit3,
-    ImageIcon,
+    Eye,
+    FileText,
     Layers3,
     Plus,
-    Save,
     Trash2,
-    X,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import ContextActionMenu from '@/components/ContextActionMenu';
 import DeleteModal from '@/components/DeleteModal';
-import InputError from '@/components/input-error';
 import SortViewMenu from '@/components/SortViewMenu';
 import { Button } from '@/components/ui/button';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
+import CourseCard from './partials/CourseCard';
+import CourseFilters from './partials/CourseFilters';
+import CourseGalleryCard from './partials/CourseGalleryCard';
+import CourseModal from './partials/CourseModal';
+import CourseReviewModal from './partials/CourseReviewModal';
+import CourseStats from './partials/CourseStats';
 
 const emptyCourseForm = {
     title: '',
@@ -55,6 +43,13 @@ const courseViewOptions = [
     { label: 'Cards', value: 'cards' },
 ];
 
+const courseFilterOptions = [
+    { label: 'All', value: 'all' },
+    { label: 'Drafted', value: 'draft' },
+    { label: 'Published', value: 'assigned' },
+    { label: 'Archived', value: 'archived' },
+];
+
 const slugify = (value) =>
     value
         .toLowerCase()
@@ -67,7 +62,7 @@ const courseStatus = (status) => (status === 'published' ? 'assigned' : status);
 const courseStatusLabel = (status) =>
     ({
         draft: 'Draft',
-        assigned: 'Assigned',
+        assigned: 'Published',
         archived: 'Archived',
     })[courseStatus(status)] ?? 'Draft';
 
@@ -95,11 +90,13 @@ const normalizeCoursePayload = (data) => {
 export default function CoursesIndex({ courses = [] }) {
     const [modalOpen, setModalOpen] = useState(false);
     const [editingCourse, setEditingCourse] = useState(null);
+    const [courseToReview, setCourseToReview] = useState(null);
     const [courseToDelete, setCourseToDelete] = useState(null);
     const [courseMenu, setCourseMenu] = useState(null);
     const [deleteProcessing, setDeleteProcessing] = useState(false);
     const [sortValue, setSortValue] = useState(defaultSort);
     const [viewMode, setViewMode] = useState(defaultView);
+    const [statusFilter, setStatusFilter] = useState('all');
 
     const form = useForm(emptyCourseForm);
     const isEditing = Boolean(editingCourse);
@@ -107,15 +104,16 @@ export default function CoursesIndex({ courses = [] }) {
     const stats = useMemo(
         () => ({
             total: courses.length,
-            assigned: courses.filter((course) => courseStatus(course.status) === 'assigned')
-                .length,
+            assigned: courses.filter(
+                (course) => courseStatus(course.status) === 'assigned',
+            ).length,
             drafts: courses.filter((course) => course.status === 'draft')
                 .length,
         }),
         [courses],
     );
 
-    const sortedCourses = useMemo(() => {
+    const visibleCourses = useMemo(() => {
         const timestampFor = (course) => {
             const date =
                 sortValue === 'date_posted'
@@ -125,10 +123,18 @@ export default function CoursesIndex({ courses = [] }) {
             return new Date(date).getTime() || 0;
         };
 
-        return [...courses].sort((firstCourse, secondCourse) => {
-            return timestampFor(secondCourse) - timestampFor(firstCourse);
-        });
-    }, [courses, sortValue]);
+        return courses
+            .filter((course) => {
+                if (statusFilter === 'all') {
+                    return true;
+                }
+
+                return courseStatus(course.status) === statusFilter;
+            })
+            .sort((firstCourse, secondCourse) => {
+                return timestampFor(secondCourse) - timestampFor(firstCourse);
+            });
+    }, [courses, sortValue, statusFilter]);
 
     const openCreateModal = () => {
         setEditingCourse(null);
@@ -159,6 +165,18 @@ export default function CoursesIndex({ courses = [] }) {
             item: course,
             x: Math.min(event.clientX, window.innerWidth - 180),
             y: Math.min(event.clientY, window.innerHeight - 112),
+        });
+    };
+
+    const openCourseMenuFromButton = (event, course) => {
+        event.stopPropagation();
+
+        const rect = event.currentTarget.getBoundingClientRect();
+
+        setCourseMenu({
+            item: course,
+            x: Math.min(rect.right - 180, window.innerWidth - 180),
+            y: Math.min(rect.bottom + 8, window.innerHeight - 224),
         });
     };
 
@@ -221,6 +239,39 @@ export default function CoursesIndex({ courses = [] }) {
         });
     };
 
+    const openReviewModal = (course) => {
+        setCourseMenu(null);
+        setCourseToReview(course);
+    };
+
+    const updateCourseStatus = (course, status) => {
+        setCourseMenu(null);
+
+        router.patch(
+            `/courses/${course.id}/status`,
+            { status },
+            { preserveScroll: true },
+        );
+    };
+
+    const renderCourse = (course) => {
+        const cardProps = {
+            course,
+            statusLabel: courseStatusLabel,
+            statusStyles: courseStatusStyles,
+            onOpenMenu: (event) => openCourseMenu(event, course),
+            onOpenMenuFromButton: (event) =>
+                openCourseMenuFromButton(event, course),
+            onReview: () => openReviewModal(course),
+        };
+
+        return viewMode === 'cards' ? (
+            <CourseGalleryCard key={course.id} {...cardProps} />
+        ) : (
+            <CourseCard key={course.id} {...cardProps} />
+        );
+    };
+
     return (
         <>
             <Head title="Courses" />
@@ -245,17 +296,7 @@ export default function CoursesIndex({ courses = [] }) {
                             </div>
 
                             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                                <div className="grid grid-cols-3 gap-2 text-sm">
-                                    <Metric label="Total" value={stats.total} />
-                                    <Metric
-                                        label="Assigned"
-                                        value={stats.assigned}
-                                    />
-                                    <Metric
-                                        label="Drafts"
-                                        value={stats.drafts}
-                                    />
-                                </div>
+                                <CourseStats stats={stats} />
                                 <Button
                                     type="button"
                                     className="bg-alpha"
@@ -269,52 +310,43 @@ export default function CoursesIndex({ courses = [] }) {
                     </header>
 
                     <section className="overflow-hidden rounded-lg border border-border bg-background shadow-xs">
-                        <div className="flex flex-col justify-between gap-4 border-b border-border p-5 sm:flex-row sm:items-center">
+                        <div className="flex flex-col justify-between gap-4 border-b border-border p-5 lg:flex-row lg:items-center">
                             <div>
                                 <h2 className="text-lg font-semibold text-foreground">
                                     Course catalog
                                 </h2>
                                 <p className="text-sm text-muted-foreground">
-                                    {courses.length} course
-                                    {courses.length === 1 ? '' : 's'} ready to
-                                    manage.
+                                    {visibleCourses.length} of {courses.length}{' '}
+                                    course{courses.length === 1 ? '' : 's'}{' '}
+                                    ready to manage.
                                 </p>
                             </div>
-                            <SortViewMenu
-                                sortOptions={courseSortOptions}
-                                sortValue={sortValue}
-                                onSortChange={setSortValue}
-                                viewOptions={courseViewOptions}
-                                viewValue={viewMode}
-                                onViewChange={setViewMode}
-                                onReset={() => {
-                                    setSortValue(defaultSort);
-                                    setViewMode(defaultView);
-                                }}
-                            />
+                            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                                <CourseFilters
+                                    value={statusFilter}
+                                    options={courseFilterOptions}
+                                    onChange={setStatusFilter}
+                                />
+                                <SortViewMenu
+                                    sortOptions={courseSortOptions}
+                                    sortValue={sortValue}
+                                    onSortChange={setSortValue}
+                                    viewOptions={courseViewOptions}
+                                    viewValue={viewMode}
+                                    onViewChange={setViewMode}
+                                    onReset={() => {
+                                        setSortValue(defaultSort);
+                                        setViewMode(defaultView);
+                                        setStatusFilter('all');
+                                    }}
+                                />
+                            </div>
                         </div>
 
                         {courses.length === 0 ? (
-                            <div className="flex min-h-96 flex-col items-center justify-center px-6 text-center">
-                                <div className="mb-4 flex size-12 items-center justify-center rounded-lg bg-alpha text-black">
-                                    <Plus className="size-5" />
-                                </div>
-                                <h3 className="text-base font-semibold text-foreground">
-                                    No courses yet
-                                </h3>
-                                <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-                                    Create the first course and it will show up
-                                    here as a catalog item.
-                                </p>
-                                <Button
-                                    type="button"
-                                    className="mt-4 bg-alpha"
-                                    onClick={openCreateModal}
-                                >
-                                    <Plus />
-                                    Create course
-                                </Button>
-                            </div>
+                            <EmptyCourses onCreate={openCreateModal} />
+                        ) : visibleCourses.length === 0 ? (
+                            <EmptyFilter />
                         ) : (
                             <div
                                 className={
@@ -323,25 +355,7 @@ export default function CoursesIndex({ courses = [] }) {
                                         : 'grid gap-4 p-4'
                                 }
                             >
-                                {sortedCourses.map((course) =>
-                                    viewMode === 'cards' ? (
-                                        <CourseGalleryCard
-                                            key={course.id}
-                                            course={course}
-                                            onOpenMenu={(event) =>
-                                                openCourseMenu(event, course)
-                                            }
-                                        />
-                                    ) : (
-                                        <CourseCard
-                                            key={course.id}
-                                            course={course}
-                                            onOpenMenu={(event) =>
-                                                openCourseMenu(event, course)
-                                            }
-                                        />
-                                    ),
-                                )}
+                                {visibleCourses.map(renderCourse)}
                             </div>
                         )}
                     </section>
@@ -368,9 +382,32 @@ export default function CoursesIndex({ courses = [] }) {
                 onClose={() => setCourseMenu(null)}
                 actions={[
                     {
+                        label: 'Review course',
+                        icon: <Eye className="size-4" />,
+                        onSelect: (course) => openReviewModal(course),
+                    },
+                    {
                         label: 'Edit course',
                         icon: <Edit3 className="size-4" />,
                         onSelect: (course) => openEditModal(course),
+                    },
+                    {
+                        label: 'Mark as draft',
+                        icon: <FileText className="size-4" />,
+                        onSelect: (course) =>
+                            updateCourseStatus(course, 'draft'),
+                    },
+                    {
+                        label: 'Publish course',
+                        icon: <CheckCircle2 className="size-4" />,
+                        onSelect: (course) =>
+                            updateCourseStatus(course, 'assigned'),
+                    },
+                    {
+                        label: 'Archive course',
+                        icon: <Archive className="size-4" />,
+                        onSelect: (course) =>
+                            updateCourseStatus(course, 'archived'),
                     },
                     {
                         label: 'Delete course',
@@ -382,6 +419,7 @@ export default function CoursesIndex({ courses = [] }) {
                         },
                     },
                 ]}
+                widthClass="w-48"
             />
 
             <DeleteModal
@@ -394,306 +432,56 @@ export default function CoursesIndex({ courses = [] }) {
                 loading={deleteProcessing}
                 onConfirm={deleteCourse}
             />
+
+            <CourseReviewModal
+                course={courseToReview}
+                open={Boolean(courseToReview)}
+                onOpenChange={(open) => !open && setCourseToReview(null)}
+                statusLabel={courseStatusLabel}
+                statusStyles={courseStatusStyles}
+            />
         </>
     );
 }
 
-function CourseModal({
-    open,
-    onOpenChange,
-    form,
-    isEditing,
-    onSubmit,
-    onUpdateField,
-}) {
+function EmptyCourses({ onCreate }) {
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
-                <DialogHeader>
-                    <DialogTitle>
-                        {isEditing ? 'Edit course' : 'Create course'}
-                    </DialogTitle>
-                    <DialogDescription>
-                        {isEditing
-                            ? 'Update the reusable course shell.'
-                            : 'Create a reusable course for the catalog.'}
-                    </DialogDescription>
-                </DialogHeader>
-
-                <form onSubmit={onSubmit} className="space-y-4">
-                    <div className="grid gap-4 sm:grid-cols-2">
-                        <Field label="Title" error={form.errors.title}>
-                            <Input
-                                value={form.data.title}
-                                onChange={(event) =>
-                                    onUpdateField('title', event.target.value)
-                                }
-                                placeholder="Full-Stack JavaScript"
-                            />
-                        </Field>
-
-                        <Field label="Slug" error={form.errors.slug}>
-                            <Input
-                                value={form.data.slug}
-                                onChange={(event) =>
-                                    onUpdateField(
-                                        'slug',
-                                        slugify(event.target.value),
-                                    )
-                                }
-                                placeholder="full-stack-javascript"
-                            />
-                        </Field>
-                    </div>
-
-                    <Field label="Description" error={form.errors.description}>
-                        <textarea
-                            value={form.data.description}
-                            onChange={(event) =>
-                                onUpdateField('description', event.target.value)
-                            }
-                            placeholder="What learners will build, practice, and master."
-                            className="min-h-28 w-full resize-none rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-                        />
-                    </Field>
-
-                    <div className="grid gap-4 sm:grid-cols-2">
-                        <Field
-                            label="Banner image"
-                            error={form.errors.thumbnail}
-                        >
-                            <Input
-                                type="file"
-                                accept="image/*"
-                                onChange={(event) =>
-                                    onUpdateField(
-                                        'thumbnail',
-                                        event.target.files?.[0] ?? null,
-                                    )
-                                }
-                            />
-                        </Field>
-
-                        <Field
-                            label="Estimated duration"
-                            error={form.errors.estimated_duration_days}
-                        >
-                            <Input
-                                type="number"
-                                min="1"
-                                value={form.data.estimated_duration_days}
-                                onChange={(event) =>
-                                    onUpdateField(
-                                        'estimated_duration_days',
-                                        event.target.value,
-                                    )
-                                }
-                                placeholder="10 days"
-                            />
-                        </Field>
-                    </div>
-
-                    <div className="grid gap-4 sm:grid-cols-2">
-                        <Field label="Status" error={form.errors.status}>
-                            <Select
-                                value={form.data.status}
-                                onValueChange={(value) =>
-                                    onUpdateField('status', value)
-                                }
-                            >
-                                <SelectTrigger className="w-full">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="draft">Draft</SelectItem>
-                                    <SelectItem value="assigned">
-                                        Assigned
-                                    </SelectItem>
-                                    <SelectItem value="archived">
-                                        Archived
-                                    </SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </Field>
-                    </div>
-
-                    <DialogFooter>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => onOpenChange(false)}
-                        >
-                            <X />
-                            Cancel
-                        </Button>
-                        <Button
-                            type="submit"
-                            disabled={form.processing}
-                            className="bg-alpha"
-                        >
-                            {isEditing ? <Save /> : <Plus />}
-                            {form.processing
-                                ? 'Saving...'
-                                : isEditing
-                                  ? 'Save changes'
-                                  : 'Create course'}
-                        </Button>
-                    </DialogFooter>
-                </form>
-            </DialogContent>
-        </Dialog>
-    );
-}
-
-function Metric({ label, value }) {
-    return (
-        <div className="min-w-20 rounded-md border border-border bg-muted/30 px-3 py-2 shadow-xs transition-colors hover:border-alpha/50">
-            <div className="text-lg leading-none font-semibold text-alpha">
-                {value}
+        <div className="flex min-h-96 flex-col items-center justify-center px-6 text-center">
+            <div className="mb-4 flex size-12 items-center justify-center rounded-lg bg-alpha text-black">
+                <Plus className="size-5" />
             </div>
-            <div className="mt-1 text-xs text-muted-foreground">{label}</div>
+            <h3 className="text-base font-semibold text-foreground">
+                No courses yet
+            </h3>
+            <p className="mt-1 max-w-sm text-sm text-muted-foreground">
+                Create the first course and it will show up here as a catalog
+                item.
+            </p>
+            <Button
+                type="button"
+                className="mt-4 bg-alpha"
+                onClick={onCreate}
+            >
+                <Plus />
+                Create course
+            </Button>
         </div>
     );
 }
 
-function Field({ label, error, children }) {
+function EmptyFilter() {
     return (
-        <div className="space-y-2">
-            <Label>{label}</Label>
-            {children}
-            <InputError message={error} />
-        </div>
-    );
-}
-
-function CourseCard({ course, onOpenMenu }) {
-    return (
-        <article
-            className="group relative overflow-hidden rounded-lg border border-border bg-card shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:border-alpha/60 hover:shadow-[0_18px_45px_rgba(0,0,0,0.22)]"
-            onContextMenu={onOpenMenu}
-        >
-            <div className="absolute inset-y-0 left-0 w-1 bg-alpha opacity-80" />
-            <div className="grid sm:grid-cols-[1fr_34%]">
-                <div className="relative flex min-h-44 flex-col justify-between gap-5 overflow-hidden p-4 pl-6">
-                    <div className="absolute inset-0 bg-[linear-gradient(115deg,var(--color-muted)_0%,transparent_42%)] opacity-35" />
-                    <div className="relative">
-                        <div className="mb-3 flex items-center gap-2">
-                            <span className="flex size-8 items-center justify-center rounded-md border border-alpha/30 bg-alpha/10 text-xs font-bold text-alpha">
-                                {course.title?.slice(0, 2).toUpperCase()}
-                            </span>
-                            <p className="text-xs font-medium text-muted-foreground">
-                                Created by {course.creator_name ?? 'Local Coach'}
-                            </p>
-                        </div>
-                        <h3 className="max-w-2xl text-xl leading-tight font-semibold text-foreground transition-colors group-hover:text-alpha">
-                            {course.title}
-                        </h3>
-                        {course.description && (
-                            <p className="mt-2 line-clamp-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-                                {course.description}
-                            </p>
-                        )}
-                        <span
-                            className={`mt-3 inline-flex w-fit rounded-full border px-2.5 py-1 text-xs font-medium ${courseStatusStyles(course.status)}`}
-                        >
-                            {courseStatusLabel(course.status)}
-                        </span>
-                    </div>
-
-                    <div className="relative flex items-center gap-3">
-                        {course.estimated_duration_days && (
-                            <span className="inline-flex w-fit items-center gap-2 rounded-full border border-border bg-background/70 px-3 py-1.5 text-xs font-medium text-muted-foreground">
-                                <Clock className="size-4 text-alpha" />
-                                {course.estimated_duration_days} days
-                            </span>
-                        )}
-                    </div>
-                </div>
-
-                <div className="border-l border-border/70 bg-muted/20 p-2">
-                    <BannerVisual
-                        imageUrl={course.thumbnail_url}
-                        className="h-44 rounded-md"
-                    />
-                </div>
+        <div className="flex min-h-72 flex-col items-center justify-center px-6 text-center">
+            <div className="mb-4 flex size-12 items-center justify-center rounded-lg border border-border bg-muted/30">
+                <Archive className="size-5 text-alpha" />
             </div>
-        </article>
-    );
-}
-
-function CourseGalleryCard({ course, onOpenMenu }) {
-    return (
-        <article
-            className="group overflow-hidden rounded-lg border border-border bg-card shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:border-alpha/60 hover:shadow-[0_18px_45px_rgba(0,0,0,0.22)]"
-            onContextMenu={onOpenMenu}
-        >
-            <div className="border-b border-border/70 bg-muted/20 p-2">
-                <BannerVisual
-                    imageUrl={course.thumbnail_url}
-                    className="h-36 rounded-md"
-                />
-            </div>
-            <div className="flex min-h-40 flex-col justify-between gap-4 p-4">
-                <div>
-                    <div className="mb-3 flex items-center gap-2">
-                        <span className="flex size-8 items-center justify-center rounded-md border border-alpha/30 bg-alpha/10 text-xs font-bold text-alpha">
-                            {course.title?.slice(0, 2).toUpperCase()}
-                        </span>
-                        <p className="text-xs font-medium text-muted-foreground">
-                            {course.creator_name ?? 'Local Coach'}
-                        </p>
-                    </div>
-                    <h3 className="text-xl leading-tight font-semibold text-foreground transition-colors group-hover:text-alpha">
-                        {course.title}
-                    </h3>
-                    {course.description && (
-                        <p className="mt-2 line-clamp-2 text-sm leading-6 text-muted-foreground">
-                            {course.description}
-                        </p>
-                    )}
-                    <span
-                        className={`mt-3 inline-flex w-fit rounded-full border px-2.5 py-1 text-xs font-medium ${courseStatusStyles(course.status)}`}
-                    >
-                        {courseStatusLabel(course.status)}
-                    </span>
-                </div>
-
-                {course.estimated_duration_days && (
-                    <span className="inline-flex w-fit items-center gap-2 rounded-full border border-border bg-muted/30 px-3 py-1.5 text-xs font-medium text-muted-foreground">
-                        <Clock className="size-4 text-alpha" />
-                        {course.estimated_duration_days} days
-                    </span>
-                )}
-            </div>
-        </article>
-    );
-}
-
-function BannerVisual({ imageUrl, className = 'h-56' }) {
-    const [imageFailed, setImageFailed] = useState(false);
-
-    return (
-        <div className={`relative overflow-hidden bg-muted ${className}`}>
-            {imageUrl && !imageFailed ? (
-                <>
-                    <img
-                        src={imageUrl}
-                        alt=""
-                        aria-hidden="true"
-                        className="absolute inset-0 h-full w-full scale-110 object-cover opacity-35 blur-md"
-                    />
-                    <img
-                        src={imageUrl}
-                        alt=""
-                        onError={() => setImageFailed(true)}
-                        className="relative h-full w-full object-contain"
-                    />
-                </>
-            ) : (
-                <div className="flex h-full items-center justify-center bg-[linear-gradient(135deg,var(--color-alpha)_0%,var(--color-alpha)_42%,var(--color-background)_42%,var(--color-background)_100%)]">
-                    <ImageIcon className="size-10 text-foreground/70" />
-                </div>
-            )}
+            <h3 className="text-base font-semibold text-foreground">
+                No courses in this filter
+            </h3>
+            <p className="mt-1 max-w-sm text-sm text-muted-foreground">
+                Switch filters or reset the catalog view to see the full course
+                list.
+            </p>
         </div>
     );
 }

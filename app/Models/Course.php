@@ -22,6 +22,11 @@ class Course extends Model
         return $this->hasMany(Module::class);
     }
 
+    public function chapters(): HasManyThrough
+    {
+        return $this->hasManyThrough(Chapter::class, Module::class);
+    }
+
     public function coursePromotions(): HasMany
     {
         return $this->hasMany(CoursePromotion::class);
