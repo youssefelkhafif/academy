@@ -13,6 +13,7 @@ import { useMemo, useState } from 'react';
 import ContextActionMenu from '@/components/ContextActionMenu';
 import DeleteModal from '@/components/DeleteModal';
 import InputError from '@/components/input-error';
+import SortViewMenu from '@/components/SortViewMenu';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -41,6 +42,19 @@ const emptyCourseForm = {
     status: 'draft',
 };
 
+const defaultSort = 'recently_active';
+const defaultView = 'banners';
+
+const courseSortOptions = [
+    { label: 'Recently Active', value: 'recently_active' },
+    { label: 'Date Posted', value: 'date_posted' },
+];
+
+const courseViewOptions = [
+    { label: 'Banners', value: 'banners' },
+    { label: 'Cards', value: 'cards' },
+];
+
 const slugify = (value) =>
     value
         .toLowerCase()
@@ -56,6 +70,13 @@ const courseStatusLabel = (status) =>
         assigned: 'Assigned',
         archived: 'Archived',
     })[courseStatus(status)] ?? 'Draft';
+
+const courseStatusStyles = (status) =>
+    ({
+        draft: 'border-alpha/40 bg-alpha/10 text-alpha',
+        assigned: 'border-good/40 bg-good/10 text-good',
+        archived: 'border-muted-foreground/30 bg-muted/40 text-muted-foreground',
+    })[courseStatus(status)] ?? 'border-alpha/40 bg-alpha/10 text-alpha';
 
 const normalizeCoursePayload = (data) => {
     const payload = { ...data };
@@ -77,6 +98,8 @@ export default function CoursesIndex({ courses = [] }) {
     const [courseToDelete, setCourseToDelete] = useState(null);
     const [courseMenu, setCourseMenu] = useState(null);
     const [deleteProcessing, setDeleteProcessing] = useState(false);
+    const [sortValue, setSortValue] = useState(defaultSort);
+    const [viewMode, setViewMode] = useState(defaultView);
 
     const form = useForm(emptyCourseForm);
     const isEditing = Boolean(editingCourse);
@@ -91,6 +114,21 @@ export default function CoursesIndex({ courses = [] }) {
         }),
         [courses],
     );
+
+    const sortedCourses = useMemo(() => {
+        const timestampFor = (course) => {
+            const date =
+                sortValue === 'date_posted'
+                    ? course.created_at
+                    : course.updated_at;
+
+            return new Date(date).getTime() || 0;
+        };
+
+        return [...courses].sort((firstCourse, secondCourse) => {
+            return timestampFor(secondCourse) - timestampFor(firstCourse);
+        });
+    }, [courses, sortValue]);
 
     const openCreateModal = () => {
         setEditingCourse(null);
@@ -187,42 +225,51 @@ export default function CoursesIndex({ courses = [] }) {
         <>
             <Head title="Courses" />
 
-            <div className="min-h-full bg-muted/20 px-4 py-5 text-foreground sm:px-6 lg:px-8">
+            <div className="min-h-full bg-background px-4 py-5 text-foreground sm:px-6 lg:px-8">
                 <div className="mx-auto flex max-w-7xl flex-col gap-5">
-                    <header className="flex flex-col justify-between gap-4 rounded-lg border border-border bg-background p-5 shadow-xs md:flex-row md:items-center">
-                        <div className="space-y-1">
-                            <div className="flex items-center gap-2 text-xs font-medium tracking-wide text-alpha uppercase">
-                                <Layers3 className="size-4" />
-                                Coach workspace
+                    <header className="relative overflow-hidden rounded-lg border border-border bg-background shadow-xs">
+                        <div className="absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,var(--color-alpha),transparent_72%)]" />
+                        <div className="flex flex-col justify-between gap-4 p-5 md:flex-row md:items-center">
+                            <div className="space-y-1">
+                                <div className="flex items-center gap-2 text-xs font-medium tracking-wide text-alpha uppercase">
+                                    <Layers3 className="size-4" />
+                                    Coach workspace
+                                </div>
+                                <h1 className="text-2xl font-semibold text-foreground">
+                                    Courses
+                                </h1>
+                                <p className="max-w-2xl text-sm text-muted-foreground">
+                                    Manage reusable courses before assigning
+                                    them to promotions.
+                                </p>
                             </div>
-                            <h1 className="text-2xl font-semibold text-foreground">
-                                Courses
-                            </h1>
-                            <p className="max-w-2xl text-sm text-muted-foreground">
-                                Manage reusable courses before assigning them to
-                                promotions.
-                            </p>
-                        </div>
 
-                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                            <div className="grid grid-cols-3 gap-2 text-sm">
-                                <Metric label="Total" value={stats.total} />
-                                <Metric label="Assigned" value={stats.assigned} />
-                                <Metric label="Drafts" value={stats.drafts} />
+                            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                                <div className="grid grid-cols-3 gap-2 text-sm">
+                                    <Metric label="Total" value={stats.total} />
+                                    <Metric
+                                        label="Assigned"
+                                        value={stats.assigned}
+                                    />
+                                    <Metric
+                                        label="Drafts"
+                                        value={stats.drafts}
+                                    />
+                                </div>
+                                <Button
+                                    type="button"
+                                    className="bg-alpha"
+                                    onClick={openCreateModal}
+                                >
+                                    <Plus />
+                                    New course
+                                </Button>
                             </div>
-                            <Button
-                                type="button"
-                                className="bg-alpha"
-                                onClick={openCreateModal}
-                            >
-                                <Plus />
-                                New course
-                            </Button>
                         </div>
                     </header>
 
-                    <section className="rounded-lg border border-border bg-background shadow-xs">
-                        <div className="flex items-center justify-between gap-3 border-b border-border p-5">
+                    <section className="overflow-hidden rounded-lg border border-border bg-background shadow-xs">
+                        <div className="flex flex-col justify-between gap-4 border-b border-border p-5 sm:flex-row sm:items-center">
                             <div>
                                 <h2 className="text-lg font-semibold text-foreground">
                                     Course catalog
@@ -233,6 +280,18 @@ export default function CoursesIndex({ courses = [] }) {
                                     manage.
                                 </p>
                             </div>
+                            <SortViewMenu
+                                sortOptions={courseSortOptions}
+                                sortValue={sortValue}
+                                onSortChange={setSortValue}
+                                viewOptions={courseViewOptions}
+                                viewValue={viewMode}
+                                onViewChange={setViewMode}
+                                onReset={() => {
+                                    setSortValue(defaultSort);
+                                    setViewMode(defaultView);
+                                }}
+                            />
                         </div>
 
                         {courses.length === 0 ? (
@@ -257,16 +316,32 @@ export default function CoursesIndex({ courses = [] }) {
                                 </Button>
                             </div>
                         ) : (
-                            <div className="grid gap-4 p-4">
-                                {courses.map((course) => (
-                                    <CourseCard
-                                        key={course.id}
-                                        course={course}
-                                        onOpenMenu={(event) =>
-                                            openCourseMenu(event, course)
-                                        }
-                                    />
-                                ))}
+                            <div
+                                className={
+                                    viewMode === 'cards'
+                                        ? 'grid gap-4 p-4 md:grid-cols-2 xl:grid-cols-3'
+                                        : 'grid gap-4 p-4'
+                                }
+                            >
+                                {sortedCourses.map((course) =>
+                                    viewMode === 'cards' ? (
+                                        <CourseGalleryCard
+                                            key={course.id}
+                                            course={course}
+                                            onOpenMenu={(event) =>
+                                                openCourseMenu(event, course)
+                                            }
+                                        />
+                                    ) : (
+                                        <CourseCard
+                                            key={course.id}
+                                            course={course}
+                                            onOpenMenu={(event) =>
+                                                openCourseMenu(event, course)
+                                            }
+                                        />
+                                    ),
+                                )}
                             </div>
                         )}
                     </section>
@@ -472,8 +547,8 @@ function CourseModal({
 
 function Metric({ label, value }) {
     return (
-        <div className="min-w-20 rounded-md border border-border bg-muted/40 px-3 py-2">
-            <div className="text-lg leading-none font-semibold text-foreground">
+        <div className="min-w-20 rounded-md border border-border bg-muted/30 px-3 py-2 shadow-xs transition-colors hover:border-alpha/50">
+            <div className="text-lg leading-none font-semibold text-alpha">
                 {value}
             </div>
             <div className="mt-1 text-xs text-muted-foreground">{label}</div>
@@ -494,42 +569,111 @@ function Field({ label, error, children }) {
 function CourseCard({ course, onOpenMenu }) {
     return (
         <article
-            className="group relative overflow-hidden rounded-lg border border-border bg-card shadow-xs transition-colors hover:border-alpha/60"
+            className="group relative overflow-hidden rounded-lg border border-border bg-card shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:border-alpha/60 hover:shadow-[0_18px_45px_rgba(0,0,0,0.22)]"
             onContextMenu={onOpenMenu}
         >
-            <div className="grid h-56 sm:grid-cols-[1fr_34%]">
-                <div className="flex flex-col justify-between gap-8 p-5">
-                    <div>
-                        <p className="text-xs font-medium text-muted-foreground">
-                            Created by {course.creator_name ?? 'Local Coach'}
-                        </p>
-                        <h3 className="mt-2 text-2xl leading-tight font-semibold text-foreground transition-colors group-hover:text-alpha">
+            <div className="absolute inset-y-0 left-0 w-1 bg-alpha opacity-80" />
+            <div className="grid sm:grid-cols-[1fr_34%]">
+                <div className="relative flex min-h-44 flex-col justify-between gap-5 overflow-hidden p-4 pl-6">
+                    <div className="absolute inset-0 bg-[linear-gradient(115deg,var(--color-muted)_0%,transparent_42%)] opacity-35" />
+                    <div className="relative">
+                        <div className="mb-3 flex items-center gap-2">
+                            <span className="flex size-8 items-center justify-center rounded-md border border-alpha/30 bg-alpha/10 text-xs font-bold text-alpha">
+                                {course.title?.slice(0, 2).toUpperCase()}
+                            </span>
+                            <p className="text-xs font-medium text-muted-foreground">
+                                Created by {course.creator_name ?? 'Local Coach'}
+                            </p>
+                        </div>
+                        <h3 className="max-w-2xl text-xl leading-tight font-semibold text-foreground transition-colors group-hover:text-alpha">
                             {course.title}
                         </h3>
-                        <span className="mt-3 inline-flex w-fit rounded-full border border-border bg-muted/40 px-2.5 py-1 text-xs font-medium text-muted-foreground">
+                        {course.description && (
+                            <p className="mt-2 line-clamp-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+                                {course.description}
+                            </p>
+                        )}
+                        <span
+                            className={`mt-3 inline-flex w-fit rounded-full border px-2.5 py-1 text-xs font-medium ${courseStatusStyles(course.status)}`}
+                        >
                             {courseStatusLabel(course.status)}
                         </span>
                     </div>
 
-                    {course.estimated_duration_days && (
-                        <span className="inline-flex w-fit items-center gap-2 text-xs font-medium text-muted-foreground">
-                            <Clock className="size-4 text-alpha" />
-                            {course.estimated_duration_days} days
-                        </span>
-                    )}
+                    <div className="relative flex items-center gap-3">
+                        {course.estimated_duration_days && (
+                            <span className="inline-flex w-fit items-center gap-2 rounded-full border border-border bg-background/70 px-3 py-1.5 text-xs font-medium text-muted-foreground">
+                                <Clock className="size-4 text-alpha" />
+                                {course.estimated_duration_days} days
+                            </span>
+                        )}
+                    </div>
                 </div>
 
-                <BannerVisual imageUrl={course.thumbnail_url} />
+                <div className="border-l border-border/70 bg-muted/20 p-2">
+                    <BannerVisual
+                        imageUrl={course.thumbnail_url}
+                        className="h-44 rounded-md"
+                    />
+                </div>
             </div>
         </article>
     );
 }
 
-function BannerVisual({ imageUrl }) {
+function CourseGalleryCard({ course, onOpenMenu }) {
+    return (
+        <article
+            className="group overflow-hidden rounded-lg border border-border bg-card shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:border-alpha/60 hover:shadow-[0_18px_45px_rgba(0,0,0,0.22)]"
+            onContextMenu={onOpenMenu}
+        >
+            <div className="border-b border-border/70 bg-muted/20 p-2">
+                <BannerVisual
+                    imageUrl={course.thumbnail_url}
+                    className="h-36 rounded-md"
+                />
+            </div>
+            <div className="flex min-h-40 flex-col justify-between gap-4 p-4">
+                <div>
+                    <div className="mb-3 flex items-center gap-2">
+                        <span className="flex size-8 items-center justify-center rounded-md border border-alpha/30 bg-alpha/10 text-xs font-bold text-alpha">
+                            {course.title?.slice(0, 2).toUpperCase()}
+                        </span>
+                        <p className="text-xs font-medium text-muted-foreground">
+                            {course.creator_name ?? 'Local Coach'}
+                        </p>
+                    </div>
+                    <h3 className="text-xl leading-tight font-semibold text-foreground transition-colors group-hover:text-alpha">
+                        {course.title}
+                    </h3>
+                    {course.description && (
+                        <p className="mt-2 line-clamp-2 text-sm leading-6 text-muted-foreground">
+                            {course.description}
+                        </p>
+                    )}
+                    <span
+                        className={`mt-3 inline-flex w-fit rounded-full border px-2.5 py-1 text-xs font-medium ${courseStatusStyles(course.status)}`}
+                    >
+                        {courseStatusLabel(course.status)}
+                    </span>
+                </div>
+
+                {course.estimated_duration_days && (
+                    <span className="inline-flex w-fit items-center gap-2 rounded-full border border-border bg-muted/30 px-3 py-1.5 text-xs font-medium text-muted-foreground">
+                        <Clock className="size-4 text-alpha" />
+                        {course.estimated_duration_days} days
+                    </span>
+                )}
+            </div>
+        </article>
+    );
+}
+
+function BannerVisual({ imageUrl, className = 'h-56' }) {
     const [imageFailed, setImageFailed] = useState(false);
 
     return (
-        <div className="relative h-56 overflow-hidden bg-muted">
+        <div className={`relative overflow-hidden bg-muted ${className}`}>
             {imageUrl && !imageFailed ? (
                 <>
                     <img
