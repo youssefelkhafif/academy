@@ -25,8 +25,8 @@ class CourseController extends Controller
             'courses' => Course::query()
                 ->with('creator:id,name')
                 ->withCount([
-                    'modules as concepts_count',
-                    'chapters',
+                    'concepts',
+                    'topics',
                 ])
                 ->where('created_by', $manager->id)
                 ->latest()
@@ -35,7 +35,7 @@ class CourseController extends Controller
                     $courseData = $course->only($this->courseColumns());
                     $courseData['creator_name'] = $course->creator?->name ?? 'Local Coach';
                     $courseData['concepts_count'] = $course->concepts_count;
-                    $courseData['chapters_count'] = $course->chapters_count;
+                    $courseData['topics_count'] = $course->topics_count;
 
                     return $courseData;
                 }),
