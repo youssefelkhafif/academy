@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Classes;
 use App\Models\Role;
 use App\Models\User;
+use App\Models\User_role;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 class ClassController extends Controller
@@ -42,10 +44,20 @@ class ClassController extends Controller
             $tmp["type"] = $class->type;
             $info[] = $tmp;
         }
+        $user_id = Auth::user()->id;
+        $role_id = Role::where("role","suAdmin")->value("id");
+        $isSuAdmin = User_role::where("user_id", $user_id)
+        ->where("role", $role_id)->first();
+        if (!$isSuAdmin) {
+            $val = false;
+        }
+        else{
+            $val = true;
+        }
         return Inertia::render('classes/index', [
             "items" => array_values($info),
             "coaches" => $coaches,
-
+            "suAdmin" => true
         ]);
     }
 

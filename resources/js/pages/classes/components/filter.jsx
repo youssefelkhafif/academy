@@ -1,3 +1,6 @@
+import { User } from 'lucide-react';
+import { Link } from '@inertiajs/react';
+
 import {
     Select,
     SelectContent,
@@ -7,8 +10,17 @@ import {
     SelectTrigger,
     SelectValue,
 } from '../../../components/ui/select';
+import{ Button } from '../../../components/ui/button';
 
-const Filter = ({onCoachChange, onPromoChange, onFieldChange, promos, Specialty, coaches }) => {
+const Filter = ({
+    onCoachChange,
+    onPromoChange,
+    onFieldChange,
+    promos,
+    Specialty,
+    coaches,
+    suAdmin,
+}) => {
     console.log(promos);
     return (
         <>
@@ -21,7 +33,11 @@ const Filter = ({onCoachChange, onPromoChange, onFieldChange, promos, Specialty,
                         <SelectGroup>
                             <SelectLabel>promo</SelectLabel>
                             {promos?.map((e, i) => {
-                                return <SelectItem value={e}>{e === 0 ? "all": e  }</SelectItem>;
+                                return (
+                                    <SelectItem value={e}>
+                                        {e === 0 ? 'all' : e}
+                                    </SelectItem>
+                                );
                             })}
                         </SelectGroup>
                     </SelectContent>
@@ -54,6 +70,13 @@ const Filter = ({onCoachChange, onPromoChange, onFieldChange, promos, Specialty,
                         </SelectGroup>
                     </SelectContent>
                 </Select>
+                {suAdmin === true ? (
+                    <Button className="">
+                        <Link href="/getclass">refresh</Link>
+                    </Button>
+                ) : null}
+
+                {}
             </div>
         </>
     );

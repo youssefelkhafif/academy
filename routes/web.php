@@ -12,8 +12,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::inertia('dashboard', 'dashboard')->name('dashboard');
 });
 
-Route::get('/classes', [GetClassesDataController::class, 'getClasses']);
-
 Route::get('/login', [AuthController::class, 'login'])
     ->name('login');
 
