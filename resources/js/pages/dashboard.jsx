@@ -31,6 +31,6 @@ Dashboard.layout = {
   {
     title: 'Dashboard',
     href: dashboard()
-  }]
+  },]
 
 };

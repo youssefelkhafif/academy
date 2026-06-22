@@ -89,6 +89,16 @@ class User extends Authenticatable implements PasskeyUser
         "roles",
         "status",
         "formation_id",
+        "thought_class_id",
+        "studied_in_class_id",
     ];
-    
+
+    public function Roles()
+    {
+        return $this->belongsToMany(Role::class,"user_roles");
+    }
+    public function classes()
+    {
+        return $this->belongsToMany(Classes::class,"user_class");
+    }
 }

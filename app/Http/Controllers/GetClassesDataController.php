@@ -3,14 +3,57 @@
 namespace App\Http\Controllers;
 
 use App\Models\Classes;
+use App\Models\Role;
+use App\Models\User_role;
 use App\Models\User;
+use App\Models\UserClass;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 
 use function Illuminate\Log\log;
 
 class GetClassesDataController extends Controller
 {
+    private function assignRoles(array $roles, ?User $user)
+    {
+        if ($user) {
+            $user->roles()->detach();
+            foreach ($roles as $role) {
+                $role_id = Role::where("role", Str::lower($role))->value('id');
+                if ($role_id) {
+                    User_role::create([
+                        "user_id" => $user->id,
+                        "role_id" => $role_id,
+                    ]);
+                }
+            }
+        }
+    }
+
+    private function assignClass(Classes $class, ?User $user, bool $type = false)
+    {
+        if ($user && $class) {
+            $user_id = $user->id;
+            $class_id = $class->id;
+            if (!$type) {
+                $role_id = Role::where("role", "student")->value("id");
+            } else {
+                $role_id = Role::where("role", "coach")->value("id");
+            }
+            $userClass = UserClass::where("user_id", "$user_id")
+                ->where("classes_id", $class_id)
+                ->where("role_id", $role_id)->first();
+
+            if (!$userClass) {
+                UserClass::create([
+                    "user_id" => $user_id,
+                    "classes_id" => $class_id,
+                    "role_id" => $role_id
+                ]);
+            }
+        }
+    }
     //
     public function getClasses()
     {
@@ -30,33 +73,43 @@ class GetClassesDataController extends Controller
         if ($classes) {
             foreach ($classes->json() ?? [] as $key => $class) {
                 // create or update the class info 
-                $formation = Classes::where("name", "key")->first();
+                $formation = Classes::where("central_id", $class["central_id"])->first();
                 if (!$formation) {
-                    Classes::create(
-                        ["name" => $key]
+                    $formation = Classes::create(
+                        [
+                            "central_id" => $class["central_id"],
+                            "name" => $class["type"] ." ". $class["class"] ?? 1.  . " promo " . $class["promo"],
+                            "promo" => $class["promo"],
+                            "type" => $class["type"],
+                            "class" => $class["class"] ?? 1,
+                            "start_time" => $class["period"]["start"],
+                            "end_time" => $class["period"]["end"],
+                        ]
                     );
                 } else {
                     $formation->update([
-                        ["name" => $key]
+                        [
+                            "central_id" => $class["central_id"],
+                            "name" => $class["type"] . " promo " . $class["promo"],
+                            "start_time" => $class["period"]["start"],
+                            "end_time" => $class["period"]["end"],
+                        ]
                     ]);
                 }
-                // create or update the coaches info 
 
+                // create or update the coaches info 
                 foreach ($class["coaches"] ?? [] as $ref => $coach) {
                     $user = User::where("central_id", $coach["central_id"])->first();
                     if (!$user) {
-                        User::create(
+                        $user =  User::create(
                             [
                                 "central_id" => $coach["central_id"],
                                 "name" => $coach["name"] ?? "",
                                 "email" => $coach["email"] ?? "",
-                                "avatar" => $coach["avatar"] ?? "",
-                                "promo" => $coach["promo"] ?? "",
-                                "field" => $coach["field"] ?? "",
-                                "roles" => json_encode($coach["roles"]) ?? [],
-                                "status" => $coach["status"] ?? "",
-                                "formation_id" => $coach["formation_id"] ?? null
-
+                                "avatar" => $coach["avatar"],
+                                "promo" => $coach["promo"],
+                                "field" => $coach["field"],
+                                "status" => $coach["status"],
                             ]
                         );
                     } else {
@@ -65,35 +118,30 @@ class GetClassesDataController extends Controller
                                 "central_id" => $coach["central_id"],
                                 "name" => $coach["name"] ?? "",
                                 "email" => $coach["email"] ?? "",
-                                "avatar" => $coach["avatar"] ?? "",
-                                "promo" => $coach["promo"] ?? "",
-                                "field" => $coach["field"] ?? "",
-                                "roles" => json_encode($coach["roles"]) ?? [],
-                                "status" => $coach["status"] ?? "",
-                                "formation_id" => $coach["formation_id"] ?? null
-
+                                "avatar" => $coach["avatar"],
+                                "promo" => $coach["promo"],
+                                "field" => $coach["field"],
+                                "status" => $coach["status"],
                             ]
                         );
                     }
+                    $this->assignRoles($coach["roles"], $user);
+                    $this->assignClass($formation, $user, true);
                 }
-
-                // create or update the coaches students
-
+                
+                // create or update the students
                 foreach ($class["users"] ?? [] as $student) {
                     $user = User::where("central_id", $student["central_id"])->first();
                     if (!$user) {
-                        User::create(
+                        $user = User::create(
                             [
                                 "central_id" => $student["central_id"],
                                 "name" => $student["name"] ?? "",
                                 "email" => $student["email"] ?? "",
-                                "avatar" => $student["avatar"] ?? "",
-                                "promo" => $student["promo"] ?? "",
-                                "field" => $student["field"] ?? "",
-                                "roles" => json_encode($student["roles"]) ?? [],
-                                "status" => $student["status"] ?? "",
-                                "formation_id" => $student["formation_id"] ?? null
-
+                                "avatar" => $student["avatar"],
+                                "promo" => $student["promo"],
+                                "field" => $student["field"],
+                                "status" => $student["status"],
                             ]
                         );
                     } else {
@@ -102,16 +150,16 @@ class GetClassesDataController extends Controller
                                 "central_id" => $student["central_id"],
                                 "name" => $student["name"] ?? "",
                                 "email" => $student["email"] ?? "",
-                                "avatar" => $student["avatar"] ?? "",
-                                "promo" => $student["promo"] ?? "",
-                                "field" => $student["field"] ?? "",
-                                "roles" => json_encode($student["roles"]) ?? [],
-                                "status" => $student["status"] ?? "",
-                                "formation_id" => $student["formation_id"] ?? null
+                                "avatar" => $student["avatar"],
+                                "promo" => $student["promo"],
+                                "field" => $student["field"],
+                                "status" => $student["status"],
 
                             ]
                         );
                     }
+                    $this->assignRoles($student["roles"], $user);
+                    $this->assignClass($formation, $user);
                 }
             }
         }

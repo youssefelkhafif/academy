@@ -53,23 +53,19 @@ class AuthController extends Controller
                 "avatar" => $token["avatar"] ?? "",
                 "promo" => $token["promo"] ?? "",
                 "field" => $token["field"] ?? "",
-                "roles"  => json_encode($token["roles"]) ?? "",
                 "status" => $token["status"] ?? "",
-                "formation_id" => $token["formation_id"] ?? null
             ]);
         } else {
             $user->update([
-                "central_id" => $token["id"] ?? null,
+                "central_id" => $token["central_id"] ?? null,
                 "name" => $token["name"] ?? "",
                 "email" => $token["email"] ?? "",
                 "avatar" => $token["avatar"] ?? "",
                 "promo" => $token["promo"] ?? "",
                 "field" => $token["field"] ?? "",
-                "roles"  => json_encode($token["roles"]) ?? "",
                 "status" => $token["status"] ?? "",
-                "formation_id" => $token["formation_id"] ?? null
             ]);
-        }
+        }        
         Auth::login($user);
         return redirect()->intended("dashboard");
     }

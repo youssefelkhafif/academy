@@ -27,6 +27,11 @@ const mainNavItems = [
         icon: BookOpen,
     },
     {
+        title: 'Classes',
+        href: '/class',
+        icon: LayoutGrid,
+    },
+    {
         title: 'Settings',
         href: '/settings',
         icon: Settings,

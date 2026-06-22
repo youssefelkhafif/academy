@@ -16,12 +16,10 @@ return new class extends Migration
             $table->integer("central_id")->nullable()->unique();
             $table->string('name');
             $table->string('email')->unique();
-            $table->string("avatar");
-            $table->integer("promo");
-            $table->string("field");
-            $table->string("roles");
-            $table->string("status");
-            $table->integer("formation_id")->nullable();
+            $table->string("avatar")->nullable()->default("null");
+            $table->integer("promo")->nullable()->default("null");
+            $table->string("field")->nullable()->default("null");
+            $table->string("status")->nullable()->default("null");
             $table->rememberToken();
             $table->timestamps();
         });
