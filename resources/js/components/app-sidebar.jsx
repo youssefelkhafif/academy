@@ -18,7 +18,7 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { cn, toUrl } from '@/lib/utils';
-import { getClasses as classesIndex } from '@/actions/App/Http/Controllers/GetClassesDataController';
+import { index as classesIndex } from '@/actions/App/Http/Controllers/ClassController';
 import { dashboard as dashboardIndex } from '@/routes';
 import { index as coursesIndex } from '@/routes/courses';
 import { edit as profileEdit } from '@/routes/profile';
